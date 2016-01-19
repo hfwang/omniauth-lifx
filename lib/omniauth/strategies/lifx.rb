@@ -15,26 +15,31 @@ module OmniAuth
       option :scope, "remote_control:all"
 
       uid {
-        access_token.token
+        user_uuid
       }
 
       # extra do
       #   { :endpoints => raw_info }
       # end
 
-      # def raw_info
-      #   return @raw_info if @raw_info
-      #   @raw_info = {}
-      #   uri = URI("https://graph.api.smartthings.com/api/smartapps/endpoints")
-      #   req = Net::HTTP::Get.new(uri)
-      #   req["Authorization"] = "Bearer #{access_token.token}"
-      #   Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
-      #     res = http.request(req)
-      #     @raw_info = JSON.parse(res.body)
-      #     puts res.body
-      #   end
-      #   return @raw_info
-      # end
+      def user_uuid
+        all_lights
+        @user_uuid
+      end
+
+      def all_lights
+        return @all_lights if @all_lights
+        @all_lights = {}
+        uri = URI("https://api.lifx.com/v1/lights/all")
+        req = Net::HTTP::Get.new(uri)
+        req["Authorization"] = "Bearer #{access_token.token}"
+        Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
+          res = http.request(req)
+          @user_uuid = res["Lifx-Account-Uuid"]
+          @all_lights = JSON.parse(res.body)
+        end
+        return @all_lights
+      end
     end
   end
 end
